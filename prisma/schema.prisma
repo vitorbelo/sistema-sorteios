@@ -1,0 +1,53 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Participant {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  telegram     String
+  whatsapp     String    @unique
+  ticketNumber String    @unique
+  isValidated  Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  validatedAt  DateTime?
+  raffleId     String
+  raffle       Raffle    @relation(fields: [raffleId], references: [id])
+  wonRaffle    Raffle?   @relation("RaffleWinner")
+  @@map("participants")
+}
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  code      String
+  whatsapp  String
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  @@map("verification_codes")
+}
+
+model Raffle {
+  id           String        @id @default(cuid())
+  title        String
+  description  String
+  prize        String
+  startDate    DateTime      @default(now())
+  endDate      DateTime?
+  isActive     Boolean       @default(true)
+  winnerId     String?       @unique
+  drawnAt      DateTime?
+  seed         String?
+  participants Participant[]
+  createdAt    DateTime      @default(now())
+  winner       Participant?  @relation("RaffleWinner", fields: [winnerId], references: [id])
+  @@map("raffles")
+}
